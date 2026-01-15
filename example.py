@@ -157,7 +157,7 @@ def add_text_message(text, sender):
 
     chat_canvas.update_idletasks()
     chat_canvas.yview_moveto(1.0)
-
+    
 def attach_image():
     if not current_chat_id:
         return

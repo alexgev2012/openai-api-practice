@@ -1,13 +1,12 @@
 {
-  "Chat 1 • 15:35": [
+  "Chat 1 • 18:51": [
     [
-      "HI",
+      "hi",
       "user"
     ],
     [
-      "Hi there! How can I help today? I can answer questions, draft or edit text, assist with math or coding, brainstorm ideas, plan a trip, translate or summarize, create notes or emails, and more. If you have something specific in mind, tell me a bit about it. You can also upload an image or document and I’ll help with it.",
+      "Hi! How can I help with algorithms today? I can explain concepts, walk through problems, and provide runnable code. Here are some common starting points (tell me which you want or name something else):\n\n- Sorting: Quick Sort, Merge Sort, Tim Sort, and when to use each.\n- Searching: Binary Search, linear vs. binary search trees, hashing basics.\n- Graphs: BFS/DFS, Dijkstra’s, Bellman-Ford, Floyd-Warshall, A*.\n- Dynamic Programming: Longest Common Subsequence, Knapsack, Matrix Chain Multiplication, TSP basics.\n- Greedy: Huffman coding, Activity Selection, MST (Prim/Kruskal).\n- Divide and Conquer: Master theorem intuition, FFT basics.\n- Backtracking: N-Queens, Sudoku solving, permutations/combinations.\n- Complexity: Time and space analysis (Big O/Ω/Θ), optimization trade-offs.\n- Problem solving: Step-by-step approach to a specific problem, with Python/C++/Java code.\n\nIf you want, I can start with a quick example, like implementing binary search in Python and analyzing its complexity, or walk through a DP problem with a concrete example. What would you like to dive into?",
       "ai"
     ]
-  ],
-  "Chat 2 • 15:42": []
+  ]
 }

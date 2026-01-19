@@ -1,11 +1,24 @@
 INTRODUCTION
 
-//Contain context 
+/*
+Shrewd chatbot which is professional at coding
+*/
 
 SETUP
 
 //GIT CLONE
-//SET up the virtual enviroment
-//download any modules
-// run it using python3 filename.py
+//set up virtual enviroment(source venv/bin/activate)
+//Download modules(import customtkinter as ctk
+//from dotenv import load_dotenv
+//from openai import OpenAI
+//from tkinter import simpledialog, filedialog, messagebox
+//from PIL import Image, ImageTk
+//import threading
+//import json
+//import os
+//import shutil
+//import uuid
+//from datetime import datetime
+//from supabase import create_client)
+// run it using python3 <filename>.py
 

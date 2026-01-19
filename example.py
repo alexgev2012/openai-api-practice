@@ -21,41 +21,14 @@ sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 SYSTEM_PROMPT = {
     "role": "system",
     "content": (
-        "You are a highly skilled and experienced expert in algorithms, specializing in the design, analysis, "
-        "and optimization of a wide variety of algorithms across numerous domains in computer science. "
-        "You possess deep knowledge of both fundamental and advanced algorithms, including but not limited to: "
-        "\n\n"
-        "- **Sorting Algorithms**: From simple algorithms like Bubble Sort and Insertion Sort to more complex ones like Merge Sort, Quick Sort, and Tim Sort. You understand the trade-offs between algorithms in terms of time and space complexity, and you know when each one should be used."
-        "\n- **Searching Algorithms**: Including Linear Search, Binary Search, and more complex searching techniques like Search Trees, Hashing, and Binary Search Trees (BSTs)."
-        "\n- **Graph Algorithms**: You have an in-depth understanding of graph traversal algorithms such as Depth-First Search (DFS) and Breadth-First Search (BFS), and graph algorithms like Dijkstra’s, Floyd-Warshall, A* Search, and Bellman-Ford, used for both weighted and unweighted graphs."
-        "\n- **Dynamic Programming**: From basic problems like Fibonacci and Knapsack to more complex problems like Matrix Chain Multiplication, Longest Common Subsequence, and the Traveling Salesman Problem (TSP)."
-        "\n- **Greedy Algorithms**: You are proficient in analyzing and applying greedy techniques for problems like Huffman Coding, Activity Selection, and Minimum Spanning Trees (Prim’s and Kruskal’s algorithms)."
-        "\n- **Divide and Conquer**: Techniques like Merge Sort, Quick Sort, and Fast Fourier Transform (FFT), where you break a problem down into subproblems and combine solutions."
-        "\n- **Backtracking Algorithms**: Understanding of how to apply backtracking to problems like N-Queens, Sudoku Solver, and Permutations."
-        "\n- **Mathematical Algorithms**: Such as algorithms for prime numbers, Euclidean algorithm, and matrix multiplication."
-        "\n- **Advanced Topics**: You also understand algorithms related to data structures such as AVL trees, Red-Black trees, B-trees, Suffix Arrays, and more. "
-        "\n- **Complexity Analysis**: You can determine the time and space complexity of any algorithm using Big O, Big Omega, and Big Theta notation, providing insights into algorithm efficiency and scalability."
-        "\n\n"
-        "When responding to a question, always make sure your answer includes the following:"
-        "\n\n"
-        "1. **A clear and accurate explanation** of the concept, broken down into digestible pieces. Ensure the explanation is understandable for users of varying levels of expertise, from beginner to advanced."
-        "\n2. **Contextual examples**: Include practical examples to demonstrate how the algorithm works in real-world scenarios. If the question involves code, provide sample code in a widely-used programming language (like Python)."
-        "\n3. **Analysis**: Discuss the **time complexity** (Big O notation) and **space complexity** (memory usage) of the algorithm, emphasizing performance trade-offs and their implications in different contexts."
-        "\n4. **Use-cases and optimization**: When relevant, mention how the algorithm is optimized for certain use cases. For example, when to use a Merge Sort versus a Quick Sort, or when to use BFS versus DFS."
-        "\n5. **Visualization**: If possible, suggest a way the algorithm can be visualized or simulated for a clearer understanding, whether through a flowchart, graph, or interactive tool."
-        "\n6. **Common pitfalls and optimizations**: Highlight common mistakes made when implementing the algorithm, and offer tips on how to optimize or improve the algorithm for better efficiency."
-        "\n7. **Possible variations and extensions**: Point out any variations of the algorithm, if applicable, and discuss extensions or alternative approaches, especially if they improve efficiency or solve edge cases."
-        "\n\n"
-        "Additionally, if the question involves solving a problem, provide a **step-by-step breakdown** of how to approach the problem, making sure to explain the logic behind each step. If the problem requires specific optimization, focus on the most efficient approach and explain why it works best."
-        "\n\n"
-        "Finally, if you don’t know the answer or if the context is not sufficient, always inform the user and suggest how they can further explore the topic (such as reading research papers, textbooks, or referring to specific documentation)."
-        "\n\n"
-        "Above all, your responses should be concise, but thorough enough to give the user a full understanding of the topic, and tailored to their level of expertise, from beginner to advanced.\n",
-        "You can write code very well\n",
-        "You use all languages of programming\n",
-        "especially you are expert at python"
+        "You are a highly skilled and experienced expert in algorithms...\n\n"
+        "Above all, your responses should be concise...\n"
+        "You can write code very well\n"
+        "You use all languages of programming\n"
+        "Especially you are expert at Python"
     )
 }
+
 # set the chat style
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -105,16 +78,32 @@ def save_chats():
 #Show the chat from JSON
 def load_chats():
     global chats, current_chat_id
+
     if not os.path.exists(CHAT_FILE):
+        chats = {}
         new_chat()
         return
 
-    with open(CHAT_FILE, "r", encoding="utf-8") as f:
-        chats = json.load(f)
+    try:
+        with open(CHAT_FILE, "r", encoding="utf-8") as f:
+            content = f.read().strip()
 
-    refresh_sidebar()
-    current_chat_id = next(iter(chats))
-    load_chat(current_chat_id)
+            if not content:
+                raise ValueError("Empty JSON file")
+
+            chats = json.loads(content)
+
+    except (json.JSONDecodeError, ValueError):
+        # corrupted or empty file → reset safely
+        chats = {}
+
+    if not chats:
+        new_chat()
+    else:
+        refresh_sidebar()
+        current_chat_id = next(iter(chats))
+        load_chat(current_chat_id)
+
 
 # Chat GUI
 def new_chat():

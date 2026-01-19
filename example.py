@@ -1,3 +1,4 @@
+#required libraries
 import customtkinter as ctk
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -11,7 +12,7 @@ import uuid
 from datetime import datetime
 from supabase import create_client
 
-# -------------------- SETUP --------------------
+# System prompt
 load_dotenv()
 client = OpenAI()
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -55,7 +56,7 @@ SYSTEM_PROMPT = {
         "especially you are expert at python"
     )
 }
-
+# set the chat style
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
@@ -71,7 +72,7 @@ os.makedirs(IMAGE_DIR, exist_ok=True)
 chats = {}
 current_chat_id = None
 
-# -------------------- UTILITIES --------------------
+# embeds
 
 def embed_query(text: str) -> list:
     response = client.embeddings.create(
@@ -79,7 +80,7 @@ def embed_query(text: str) -> list:
         input=text
     )
     return response.data[0].embedding
-
+#search
 def semantic_search(query_text: str) -> list:
     emb_q = embed_query(query_text)
     res = sb.rpc("match_chunks", {"query_embedding": emb_q, "match_count": 5}).execute()
@@ -87,6 +88,7 @@ def semantic_search(query_text: str) -> list:
     print("RAG OUTPUT:", rows)
     return rows
 
+#create the name for chat
 def make_unique_name(name):
     if name not in chats:
         return name
@@ -95,10 +97,12 @@ def make_unique_name(name):
         i += 1
     return f"{name} ({i})"
 
+#Save chat at JSON
 def save_chats():
     with open(CHAT_FILE, "w", encoding="utf-8") as f:
         json.dump(chats, f, ensure_ascii=False, indent=2)
 
+#Show the chat from JSON
 def load_chats():
     global chats, current_chat_id
     if not os.path.exists(CHAT_FILE):
@@ -112,7 +116,7 @@ def load_chats():
     current_chat_id = next(iter(chats))
     load_chat(current_chat_id)
 
-# -------------------- CHAT MANAGEMENT --------------------
+# Chat GUI
 def new_chat():
     global current_chat_id
 
@@ -156,7 +160,7 @@ def refresh_sidebar():
         )
         btn.pack(fill="x", pady=4, padx=5)
 
-# -------------------- AI --------------------
+# send the answer
 def send_prompt(event=None):
     text = user_entry.get().strip()
     if not text or not current_chat_id:
@@ -192,6 +196,7 @@ def send_prompt(event=None):
     typing_label.configure(text="AI is typing...")
     threading.Thread(target=get_ai_response, args=(full_message,), daemon=True).start()
 
+#get the response from API key
 def get_ai_response(prompt):
     try:
         response = client.responses.create(
@@ -204,6 +209,7 @@ def get_ai_response(prompt):
 
     app.after(0, lambda: finish_ai(ai_text))
 
+#show the AI response
 def finish_ai(text):
     typing_label.configure(text="")
     add_text_message(text, "ai")
@@ -213,7 +219,7 @@ def finish_ai(text):
     user_entry.configure(state="normal")
     user_entry.focus()
 
-# -------------------- UI MESSAGE HELPERS --------------------
+# add message 
 def add_text_message(text, sender):
     color = "#1f6aa5" if sender == "user" else "#2a2a2a"
     anchor = "e" if sender == "user" else "w"
@@ -235,6 +241,7 @@ def add_text_message(text, sender):
     chat_canvas.update_idletasks()
     chat_canvas.yview_moveto(1.0)
 
+
 def attach_image():
     if not current_chat_id:
         return
@@ -254,6 +261,7 @@ def attach_image():
     chats[current_chat_id].append((saved_path, "image"))
     save_chats()
 
+#add image function
 def add_image_message(image_path):
     img = Image.open(image_path)
     img.thumbnail((320, 320))
@@ -271,6 +279,7 @@ def add_image_message(image_path):
     chat_canvas.update_idletasks()
     chat_canvas.yview_moveto(1.0)
 
+#open the image to see it
 def open_image(path):
     top = ctk.CTkToplevel(app)
     top.title("Image Preview")
@@ -282,11 +291,11 @@ def open_image(path):
     lbl.image = photo
     lbl.pack(expand=True)
 
-# -------------------- LAYOUT --------------------
+#create the frame widget
 main = ctk.CTkFrame(app)
 main.pack(fill="both", expand=True)
 
-# Sidebar
+# part where the chats are shown and you can add new chats
 sidebar = ctk.CTkFrame(main, width=230, corner_radius=0)
 sidebar.pack(side="left", fill="y")
 
@@ -297,7 +306,7 @@ ctk.CTkButton(sidebar, text="+ New Chat", height=40, command=new_chat).pack(fill
 sidebar_chats = ctk.CTkScrollableFrame(sidebar)
 sidebar_chats.pack(fill="both", expand=True, padx=10, pady=10)
 
-# Chat Area
+# part where the prompt and answers are shown and you can write the prompt
 chat_area = ctk.CTkFrame(main)
 chat_area.pack(side="right", fill="both", expand=True)
 
@@ -316,7 +325,7 @@ chat_frame.bind("<Configure>", lambda e: chat_canvas.configure(scrollregion=chat
 typing_label = ctk.CTkLabel(chat_area, text="", text_color="gray")
 typing_label.pack(pady=(5, 0))
 
-# Input
+# add photo button and send it to API
 input_frame = ctk.CTkFrame(chat_area, corner_radius=15)
 input_frame.pack(fill="x", padx=15, pady=15)
 
@@ -330,7 +339,7 @@ user_entry = ctk.CTkEntry(input_frame, placeholder_text="Type a message...", hei
 user_entry.pack(side="left", fill="x", expand=True, padx=10)
 user_entry.bind("<Return>", send_prompt)
 
-# -------------------- START --------------------
+# add mainloop
 load_chats()
 user_entry.focus()
 app.mainloop()

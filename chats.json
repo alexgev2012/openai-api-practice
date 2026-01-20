@@ -1,12 +1,3 @@
 {
-  "Chat": [
-    [
-      "Hi",
-      "user"
-    ],
-    [
-      "Hi! How can I help today? Tell me your goal or paste the problem/code, and I’ll give a concise solution or explanation (Python preferred).",
-      "ai"
-    ]
-  ]
+  "Chat": []
 }

@@ -1,98 +1,80 @@
-# required libraries
-import customtkinter as ctk
+import os
 from dotenv import load_dotenv
 from openai import OpenAI
-from tkinter import simpledialog, filedialog, messagebox
-from PIL import Image, ImageTk
-import threading
-import json
-import os
-import shutil
-import uuid
-from prompts import SYSTEM_PROMPT1, SYSTEM_PROMPT2
-from datetime import datetime
 from supabase import create_client
+from prompts import (
+    SYSTEM_PROMPT_SARANYA, SYSTEM_PROMPT_NAREK, SYSTEM_PROMPT_IRINA, 
+    SYSTEM_PROMPT_ALEKS, SYSTEM_PROMPT_MILENA, SYSTEM_PROMPT_HASMIK
+)
 
 load_dotenv()
 
-FIRST_SUPABASE_URL = os.environ.get("FIRST_SUPABASE_URL")
-FIRST_SUPABASE_SERVICE_ROLE_KEY = os.environ.get("FIRST_SUPABASE_SERVICE_ROLE_KEY")
-
-sam_brain = create_client(FIRST_SUPABASE_URL, FIRST_SUPABASE_SERVICE_ROLE_KEY)
-
-SECOND_SUPABASE_URL = os.environ.get("SECOND_SUPABASE_URL")
-SECOND_SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SECOND_SUPABASE_SERVICE_ROLE_KEY")
-linda_brain = create_client(SECOND_SUPABASE_URL, SECOND_SUPABASE_SERVICE_ROLE_KEY)
-
 client = OpenAI()
+# Initialize Supabase
+sb_url = os.environ.get("FIRST_SUPABASE_URL")
+sb_key = os.environ.get("FIRST_SUPABASE_SERVICE_ROLE_KEY")
+sam_brain = create_client(sb_url, sb_key)
 
-
-
-# ---------- Embedding ----------
-def embed_query(text: str) -> list:
-    response = client.embeddings.create(
-        model="text-embedding-3-small",
-        input=text
-    )
-    return response.data[0].embedding
-
-# ---------- RAG Search ----------
-def semantic_search(query_text: str, sb_client) -> list:
-    emb_q = embed_query(query_text)
-    res = sb_client.rpc(
-        "match_chunks",
-        {"query_embedding": emb_q, "match_count": 5}
-    ).execute()
-    return res.data or []
-
-# ---------- Bot ----------
-def run_bot(user_message, sb_client, system_prompt) -> str:
-    rag_rows = semantic_search(user_message, sb_client)
-
-    context = "\n\n".join(
-        f"[Source {i+1} | sim={row.get('similarity', 0.0):.3f}]\n{row.get('content', '')}"
-        for i, row in enumerate(rag_rows)
+def run_agent(user_message, persona_dict, current_theme):
+    # This combines the persona with the current round's goal
+    system_instruction = (
+        f"{persona_dict['content']}\n\n"
+        f"CURRENT CONVERSATION THEME: {current_theme}\n"
+        "Be natural, avoid repeating yourself, and respond to the last person."
     )
 
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "Use the retrieved context below to answer. "
-                "If it doesn't contain the answer, say so.\n\n"
-                f"RETRIEVED CONTEXT:\n{context or '(no matches)'}"
-            ),
-        },
-        system_prompt,
-        {
-            "role": "user",
-            "content": user_message,
-        },
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": user_message},
+            ],
+            temperature=0.8
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Wait, what? (Error: {e})"
+
+def simulation():
+    # Defined themes for your 3 rounds
+    themes = [
+        "ROUND 1: Focus on Saranyasoft. Discuss the company's massive success and how Saranya became a billionaire.",
+        "ROUND 2: Focus on the Year 2036. Discuss future tech, where your lives are now, and the changing world.",
+        "ROUND 3: Focus on Nostalgia. Remember the 2026 TUMO workshop, funny jokes, and how you all met."
     ]
 
-    response = client.responses.create(
-        model="gpt-5-nano",
-        input=messages,
-    )
+    # Student list
+    students = [
+        ("Narek", SYSTEM_PROMPT_NAREK),
+        ("Irina", SYSTEM_PROMPT_IRINA),
+        ("Aleks", SYSTEM_PROMPT_ALEKS),
+        ("Milena", SYSTEM_PROMPT_MILENA),
+        ("Hasmik", SYSTEM_PROMPT_HASMIK)
+    ]
 
-    return response.output_text
+    last_message = "Miss Saranya! We missed you! We were just talking about how much has changed since the workshop."
+    
+    for round_idx in range(3):
+        theme = themes[round_idx]
+        print(f"\n{'='*30}\n{theme}\n{'='*30}\n")
+        
+        # We loop through students in pairs
+        for i in range(0, len(students), 2):
+            # 1. First Student Speaks
+            name1, prompt1 = students[i]
+            last_message = run_agent(last_message, prompt1, theme)
+            print(f"{name1.upper()}: {last_message}\n")
+            
+            # 2. Second Student Speaks (if there is one left in the list)
+            if i + 1 < len(students):
+                name2, prompt2 = students[i+1]
+                last_message = run_agent(last_message, prompt2, theme)
+                print(f"{name2.upper()}: {last_message}\n")
+            
+            # 3. Saranya speaks after every two students
+            last_message = run_agent(last_message, SYSTEM_PROMPT_SARANYA, theme)
+            print(f"SARANYA: {last_message}\n")
 
-# ---------- Wrappers ----------
-def chatbotone(user_message):
-    return run_bot(user_message, sam_brain, SYSTEM_PROMPT1)
-
-def chatbottwo(user_message):
-    return run_bot(user_message, linda_brain, SYSTEM_PROMPT2)
-
-# ---------- Simulation ----------
-def simulation():
-    output = "Hi Miss Saranya do you remember us?"
-
-    for _ in range(10):
-        output = chatbotone(output)
-        print("Miss Saranya SAYS:", output)
-
-        output = chatbottwo(output)
-        print("Student group SAYS:", output)
-
-simulation()
+if __name__ == "__main__":
+    simulation()
